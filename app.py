@@ -11,6 +11,12 @@ st.set_page_config(page_title="Insurance OCR Extractor", layout="wide")
 MONGODB_CLUSTER_NAME = "ocr-insurance"
 DEFAULT_MONGODB_DB = "salvision"
 DEFAULT_MONGODB_COLLECTION = "insurance_policies"
+DEFAULT_GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_MODEL_FALLBACKS = [
+    DEFAULT_GEMINI_MODEL,
+    "gemini-2.5-flash",
+    "gemini-2.0-flash-lite",
+]
 
 FIELD_GROUPS: Dict[str, Dict[str, str]] = {
     "Policy Details": {
@@ -122,7 +128,6 @@ def run_ocr_with_gemini(files: List[Any]) -> Dict[str, Any]:
         raise RuntimeError("GEMINI_API_KEY is not set.")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
 
     all_fields = flatten_fields()
     schema = {k: f"string ({v})" for k, v in all_fields.items()}
@@ -146,7 +151,20 @@ Expected JSON keys and meanings:
         mime = getattr(f, "type", "") or ("application/pdf" if f.name.lower().endswith(".pdf") else "image/png")
         payload.append({"mime_type": mime, "data": data})
 
-    response = model.generate_content(payload)
+    preferred_model = get_setting("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
+    model_names = [preferred_model] + [name for name in GEMINI_MODEL_FALLBACKS if name != preferred_model]
+    last_error: Exception | None = None
+
+    for model_name in model_names:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(payload)
+            break
+        except Exception as exc:
+            last_error = exc
+    else:
+        raise RuntimeError(f"Gemini OCR failed for all configured models: {last_error}") from last_error
+
     parsed = parse_json_response(response.text)
 
     result = empty_record()
@@ -189,6 +207,7 @@ def main() -> None:
         st.write("Set these in Streamlit Cloud secrets:")
         st.code(
             f'GEMINI_API_KEY = "your_gemini_key"\n'
+            f'GEMINI_MODEL = "{DEFAULT_GEMINI_MODEL}"\n'
             f'MONGODB_URI = "your_mongodb_atlas_connection_string/{DEFAULT_MONGODB_DB}"\n'
             f'MONGODB_DB = "{DEFAULT_MONGODB_DB}"\n'
             f'MONGODB_COLLECTION = "{DEFAULT_MONGODB_COLLECTION}"'
