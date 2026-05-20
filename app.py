@@ -12,11 +12,11 @@ st.set_page_config(page_title="Insurance OCR Extractor", layout="wide")
 MONGODB_CLUSTER_NAME = "ocr-insurance"
 DEFAULT_MONGODB_DB = "salvision"
 DEFAULT_MONGODB_COLLECTION = "insurance_policies"
-DEFAULT_GEMINI_MODEL = "gemini-2.0-flash"
+DEFAULT_GEMINI_MODEL = "gemini-2.0-flash-lite"
 GEMINI_MODEL_FALLBACKS = [
     DEFAULT_GEMINI_MODEL,
+    "gemini-2.0-flash",
     "gemini-2.5-flash",
-    "gemini-2.0-flash-lite",
 ]
 
 FIELD_GROUPS: Dict[str, Dict[str, str]] = {
