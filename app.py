@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from datetime import datetime
 from typing import Any, Dict, List
 from urllib.parse import urlparse
@@ -112,6 +113,40 @@ def empty_record() -> Dict[str, Any]:
     return {k: "" for k in flatten_fields().keys()}
 
 
+def normalize_field_name(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+
+def field_aliases() -> Dict[str, str]:
+    aliases: Dict[str, str] = {}
+    for key, label in flatten_fields().items():
+        aliases[normalize_field_name(key)] = key
+        aliases[normalize_field_name(label)] = key
+    return aliases
+
+
+def normalize_extracted_record(parsed: Any) -> Dict[str, Any]:
+    result = empty_record()
+    aliases = field_aliases()
+
+    def walk(value: Any) -> None:
+        if isinstance(value, dict):
+            for raw_key, raw_value in value.items():
+                mapped_key = aliases.get(normalize_field_name(str(raw_key)))
+                if mapped_key and not isinstance(raw_value, (dict, list)):
+                    text = "" if raw_value is None else str(raw_value).strip()
+                    if text:
+                        result[mapped_key] = text
+                else:
+                    walk(raw_value)
+        elif isinstance(value, list):
+            for item in value:
+                walk(item)
+
+    walk(parsed)
+    return result
+
+
 def parse_json_response(raw_text: str) -> Dict[str, Any]:
     text = raw_text.strip()
     if text.startswith("```"):
@@ -120,7 +155,7 @@ def parse_json_response(raw_text: str) -> Dict[str, Any]:
     return json.loads(text)
 
 
-def run_ocr_with_gemini(files: List[Any]) -> Dict[str, Any]:
+def run_ocr_with_gemini(files: List[Any]) -> tuple[Dict[str, Any], str, str]:
     import google.generativeai as genai
 
     api_key = get_setting("GEMINI_API_KEY")
@@ -136,8 +171,8 @@ def run_ocr_with_gemini(files: List[Any]) -> Dict[str, Any]:
 You are an OCR and information extraction engine for Indian motor insurance policy documents.
 
 Extract ONLY the requested fields from the provided image(s)/PDF pages.
-- Return strict JSON object only (no markdown).
-- Use these keys exactly and keep every key present.
+- Return one flat JSON object only (no markdown, no nested groups).
+- Use the snake_case keys exactly as listed below and keep every key present.
 - If value is missing, set empty string.
 - Do not hallucinate.
 
@@ -158,20 +193,22 @@ Expected JSON keys and meanings:
     for model_name in model_names:
         try:
             model = genai.GenerativeModel(model_name)
-            response = model.generate_content(payload)
+            response = model.generate_content(
+                payload,
+                generation_config={
+                    "temperature": 0,
+                    "response_mime_type": "application/json",
+                },
+            )
             break
         except Exception as exc:
             last_error = exc
     else:
         raise RuntimeError(f"Gemini OCR failed for all configured models: {last_error}") from last_error
 
-    parsed = parse_json_response(response.text)
-
-    result = empty_record()
-    for key in result.keys():
-        value = parsed.get(key, "")
-        result[key] = "" if value is None else str(value).strip()
-    return result
+    raw_text = response.text or ""
+    parsed = parse_json_response(raw_text)
+    return normalize_extracted_record(parsed), raw_text, model_name
 
 
 def save_record(collection: Any, record: Dict[str, Any], filenames: List[str]) -> str:
@@ -223,6 +260,10 @@ def main() -> None:
 
     if "record" not in st.session_state:
         st.session_state.record = empty_record()
+    if "raw_ocr_response" not in st.session_state:
+        st.session_state.raw_ocr_response = ""
+    if "ocr_model_used" not in st.session_state:
+        st.session_state.ocr_model_used = ""
 
     uploaded_files = st.file_uploader(
         "Upload scan(s): PDF/PNG/JPG",
@@ -236,10 +277,23 @@ def main() -> None:
         else:
             with st.spinner("Running OCR and field mapping with Gemini..."):
                 try:
-                    st.session_state.record = run_ocr_with_gemini(uploaded_files)
-                    st.success("OCR complete. Review extracted fields below.")
+                    record, raw_response, model_used = run_ocr_with_gemini(uploaded_files)
+                    st.session_state.record = record
+                    st.session_state.raw_ocr_response = raw_response
+                    st.session_state.ocr_model_used = model_used
+                    filled_count = sum(1 for value in record.values() if str(value).strip())
+                    if filled_count:
+                        st.success(f"OCR complete with {filled_count} populated fields. Review extracted fields below.")
+                    else:
+                        st.warning("OCR completed, but Gemini did not return values matching the form fields. Check the raw OCR JSON below.")
                 except Exception as exc:
                     st.error(f"Processing failed: {exc}")
+
+    if st.session_state.raw_ocr_response:
+        with st.expander("Raw Gemini OCR response"):
+            if st.session_state.ocr_model_used:
+                st.caption(f"Model used: {st.session_state.ocr_model_used}")
+            st.code(st.session_state.raw_ocr_response, language="json")
 
     st.session_state.record = render_form(st.session_state.record)
 
