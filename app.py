@@ -221,6 +221,16 @@ def save_record(collection: Any, record: Dict[str, Any], filenames: List[str]) -
     return str(inserted.inserted_id)
 
 
+def form_widget_key(group_name: str, field_key: str) -> str:
+    return f"field_{group_name}_{field_key}"
+
+
+def sync_record_to_form_widgets(record: Dict[str, Any]) -> None:
+    for group_name, fields in FIELD_GROUPS.items():
+        for field_key in fields.keys():
+            st.session_state[form_widget_key(group_name, field_key)] = record.get(field_key, "")
+
+
 def render_form(data: Dict[str, Any]) -> Dict[str, Any]:
     edited = dict(data)
     for group_name, fields in FIELD_GROUPS.items():
@@ -228,8 +238,11 @@ def render_form(data: Dict[str, Any]) -> Dict[str, Any]:
         col1, col2 = st.columns(2)
         for idx, (key, label) in enumerate(fields.items()):
             target = col1 if idx % 2 == 0 else col2
+            widget_key = form_widget_key(group_name, key)
+            if widget_key not in st.session_state:
+                st.session_state[widget_key] = edited.get(key, "")
             with target:
-                edited[key] = st.text_input(label, value=edited.get(key, ""), key=f"field_{group_name}_{key}")
+                edited[key] = st.text_input(label, key=widget_key)
         st.divider()
     return edited
 
@@ -279,6 +292,7 @@ def main() -> None:
                 try:
                     record, raw_response, model_used = run_ocr_with_gemini(uploaded_files)
                     st.session_state.record = record
+                    sync_record_to_form_widgets(record)
                     st.session_state.raw_ocr_response = raw_response
                     st.session_state.ocr_model_used = model_used
                     filled_count = sum(1 for value in record.values() if str(value).strip())
