@@ -18,34 +18,31 @@ public class DepthWallpaperView extends View implements SensorEventListener {
     private Handler clockHandler;
     private Runnable clockTick;
 
-    // Smoothed tilt values, range approx -1..1
     private float tiltX = 0f;
     private float tiltY = 0f;
     private static final float SMOOTH = 0.08f;
-    private static final float MAX_TILT = 6f; // degrees of acceleration to full offset
+    private static final float MAX_TILT = 6f;
 
-    // Per-layer parallax multipliers (0=sky, 4=foreground)
+    // Layer parallax multipliers: 0=background, 4=close foreground
     private static final float[] PARALLAX = {0.05f, 0.15f, 0.30f, 0.50f, 0.80f};
 
     private String weatherTemp = "--";
     private String weatherCondition = "Clear";
+    private int weatherCode = 0;
 
-    public DepthWallpaperView(Context ctx) {
-        super(ctx);
-    }
-
-    public DepthWallpaperView(Context ctx, AttributeSet attrs) {
-        super(ctx, attrs);
-    }
+    public DepthWallpaperView(Context ctx) { super(ctx); }
+    public DepthWallpaperView(Context ctx, AttributeSet attrs) { super(ctx, attrs); }
 
     public void setScene(WallpaperScene s) {
         this.scene = s;
+        s.init(getResources());
         invalidate();
     }
 
-    public void setWeather(String temp, String condition) {
+    public void setWeather(String temp, String condition, int code) {
         this.weatherTemp = temp;
         this.weatherCondition = condition;
+        this.weatherCode = code;
         invalidate();
     }
 
@@ -54,15 +51,12 @@ public class DepthWallpaperView extends View implements SensorEventListener {
         if (sensorManager != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             if (accelerometer != null) {
-                sensorManager.registerListener(this, accelerometer,
-                        SensorManager.SENSOR_DELAY_GAME);
+                sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
             }
         }
-        // Start clock tick — redraw every 30 seconds so time stays current
         clockHandler = new Handler();
         clockTick = new Runnable() {
-            @Override
-            public void run() {
+            @Override public void run() {
                 postInvalidateOnAnimation();
                 clockHandler.postDelayed(this, 30000L);
             }
@@ -72,9 +66,7 @@ public class DepthWallpaperView extends View implements SensorEventListener {
 
     public void stopSensor() {
         if (sensorManager != null) sensorManager.unregisterListener(this);
-        if (clockHandler != null && clockTick != null) {
-            clockHandler.removeCallbacks(clockTick);
-        }
+        if (clockHandler != null && clockTick != null) clockHandler.removeCallbacks(clockTick);
     }
 
     @Override
@@ -89,9 +81,7 @@ public class DepthWallpaperView extends View implements SensorEventListener {
         postInvalidateOnAnimation();
     }
 
-    @Override
-    public void onAccuracyChanged(Sensor s, int accuracy) {
-    }
+    @Override public void onAccuracyChanged(Sensor s, int accuracy) {}
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -109,16 +99,15 @@ public class DepthWallpaperView extends View implements SensorEventListener {
             canvas.restore();
 
             if (i == insertAfter) {
-                // Draw clock at a subtle mid-depth parallax (between layer depths)
+                // Clock drawn at a fixed (no parallax) position between depth layers
                 ClockPainter.draw(canvas, w, h, scene.getClockStyle(),
-                        weatherTemp, weatherCondition);
+                        weatherTemp, weatherCondition, weatherCode);
             }
         }
 
-        // If insertAfter is beyond all layers, draw clock last
         if (insertAfter >= layers) {
             ClockPainter.draw(canvas, w, h, scene.getClockStyle(),
-                    weatherTemp, weatherCondition);
+                    weatherTemp, weatherCondition, weatherCode);
         }
     }
 }

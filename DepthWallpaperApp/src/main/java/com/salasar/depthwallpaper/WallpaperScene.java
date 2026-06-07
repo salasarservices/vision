@@ -1,59 +1,59 @@
 package com.salasar.depthwallpaper;
 
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.RadialGradient;
 import android.graphics.Shader;
 
 public abstract class WallpaperScene {
-    protected static final int MAX_PARALLAX = 80; // px offset per full tilt
+    protected static final int MAX_PARALLAX = 80;
 
     public abstract String getName();
     public abstract int getLayerCount();
-
-    /** Draw a single depth layer. */
     public abstract void drawLayer(Canvas canvas, int layer, int width, int height);
-
-    /** Which ClockStyle this scene uses. */
     public abstract ClockStyle getClockStyle();
-
-    /**
-     * The clock is drawn AFTER this layer index.
-     * E.g., returning 1 means: draw layers 0, 1, then clock, then layers 2, 3, 4.
-     * Returning a value >= getLayerCount()-1 means clock is drawn last (no layer in front).
-     */
     public abstract int getClockInsertAfterLayer();
 
     public int getAccentColor() { return 0xFF6C63FF; }
 
     /**
-     * Draw all layers with clock inserted at the correct depth position.
+     * Called once before the scene is drawn (e.g., to decode a photo bitmap).
+     * Idempotent — safe to call multiple times.
      */
+    public void init(Resources res) {}
+
+    /** Draw all layers + clock sandwiched at the right depth. */
     public final void drawAll(Canvas canvas, int width, int height,
-                              String weatherTemp, String weatherCondition) {
+                              String weatherTemp, String weatherCondition, int weatherCode) {
         int insertAfter = getClockInsertAfterLayer();
         for (int i = 0; i < getLayerCount(); i++) {
             drawLayer(canvas, i, width, height);
             if (i == insertAfter) {
                 ClockPainter.draw(canvas, width, height, getClockStyle(),
-                        weatherTemp, weatherCondition);
+                        weatherTemp, weatherCondition, weatherCode);
             }
         }
-        // If insertAfter >= layerCount, clock was never drawn — draw it last
         if (insertAfter >= getLayerCount()) {
             ClockPainter.draw(canvas, width, height, getClockStyle(),
-                    weatherTemp, weatherCondition);
+                    weatherTemp, weatherCondition, weatherCode);
         }
     }
 
-    /** Fallback drawAll with no weather info. */
-    public final void drawAll(Canvas canvas, int width, int height) {
-        drawAll(canvas, width, height, "--", "Clear");
+    /** Backward-compat overload (no weatherCode — defaults to clear sky). */
+    public final void drawAll(Canvas canvas, int width, int height,
+                              String weatherTemp, String weatherCondition) {
+        drawAll(canvas, width, height, weatherTemp, weatherCondition, 0);
     }
 
-    // ---- Shared helpers ----
+    /** Fallback with no weather info. */
+    public final void drawAll(Canvas canvas, int width, int height) {
+        drawAll(canvas, width, height, "--", "Clear", 0);
+    }
+
+    // ---- Shared painting helpers ----
+
     protected Paint newPaint(int color) {
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setColor(color);

@@ -30,7 +30,13 @@ public class PreviewActivity extends Activity {
         scene = SceneRegistry.get(index);
 
         depthView = (DepthWallpaperView) findViewById(R.id.depth_view);
-        depthView.setScene(scene);
+        depthView.setScene(scene);  // setScene calls scene.init(resources) internally
+
+        // Load weather
+        String temp = WeatherConfig.getTemperature(this);
+        String cond = WeatherConfig.getCondition(this);
+        int code = WeatherConfig.getCode(this);
+        depthView.setWeather(temp, cond, code);
 
         TextView nameView = (TextView) findViewById(R.id.tv_wallpaper_name);
         nameView.setText(scene.getName());
@@ -39,22 +45,21 @@ public class PreviewActivity extends Activity {
         Button btnBoth = (Button) findViewById(R.id.btn_both);
 
         btnHome.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                applyWallpaper(false);
-            }
+            @Override public void onClick(View v) { applyWallpaper(false); }
         });
         btnBoth.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                applyWallpaper(true);
-            }
+            @Override public void onClick(View v) { applyWallpaper(true); }
         });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        // Refresh weather in case it was auto-fetched while this screen was away
+        String temp = WeatherConfig.getTemperature(this);
+        String cond = WeatherConfig.getCondition(this);
+        int code = WeatherConfig.getCode(this);
+        depthView.setWeather(temp, cond, code);
         depthView.startSensor(this);
     }
 
@@ -78,7 +83,11 @@ public class PreviewActivity extends Activity {
                 final Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
                 Canvas canvas = new Canvas(bmp);
                 canvas.drawColor(Color.BLACK);
-                scene.drawAll(canvas, w, h);
+
+                String temp = WeatherConfig.getTemperature(PreviewActivity.this);
+                String cond = WeatherConfig.getCondition(PreviewActivity.this);
+                int code = WeatherConfig.getCode(PreviewActivity.this);
+                scene.drawAll(canvas, w, h, temp, cond, code);
 
                 WallpaperManager wm = WallpaperManager.getInstance(PreviewActivity.this);
                 try {
@@ -94,17 +103,17 @@ public class PreviewActivity extends Activity {
                         wm.setBitmap(bmp);
                     }
                     runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(PreviewActivity.this, R.string.wallpaper_set, Toast.LENGTH_SHORT).show();
+                        @Override public void run() {
+                            Toast.makeText(PreviewActivity.this, R.string.wallpaper_set,
+                                Toast.LENGTH_SHORT).show();
                         }
                     });
                 } catch (IOException e) {
                     final String msg = e.getMessage();
                     runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(PreviewActivity.this, "Error: " + msg, Toast.LENGTH_LONG).show();
+                        @Override public void run() {
+                            Toast.makeText(PreviewActivity.this, "Error: " + msg,
+                                Toast.LENGTH_LONG).show();
                         }
                     });
                 } finally {
