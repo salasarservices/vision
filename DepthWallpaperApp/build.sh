@@ -58,11 +58,15 @@ echo "=== Aligning APK ==="
 "$ZIPALIGN" -f -v 4 "$BUILD_DIR/unsigned.apk" "$BUILD_DIR/aligned.apk"
 
 echo "=== Generating debug keystore ==="
-if [ ! -f "$BUILD_DIR/debug.keystore" ]; then
+# Keystore lives next to build.sh (not inside build/) so signature stays
+# consistent across builds — Android won't allow installing an update signed
+# with a different key than the originally installed APK.
+KEYSTORE="$SRC_DIR/debug.keystore"
+if [ ! -f "$KEYSTORE" ]; then
     keytool -genkey -noprompt \
         -keyalg RSA -keysize 2048 \
         -validity 10000 \
-        -keystore "$BUILD_DIR/debug.keystore" \
+        -keystore "$KEYSTORE" \
         -storepass android \
         -keypass android \
         -alias androiddebugkey \
@@ -71,7 +75,7 @@ fi
 
 echo "=== Signing APK ==="
 "$APKSIGNER" sign \
-    --ks "$BUILD_DIR/debug.keystore" \
+    --ks "$KEYSTORE" \
     --ks-pass pass:android \
     --key-pass pass:android \
     --ks-key-alias androiddebugkey \
