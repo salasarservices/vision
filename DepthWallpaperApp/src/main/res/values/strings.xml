@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Depth Wallpaper</string>
+    <string name="apply_home">Set Home Screen</string>
+    <string name="apply_lock">Set Lock Screen</string>
+    <string name="apply_both">Set Both</string>
+    <string name="wallpaper_set">Wallpaper applied!</string>
+    <string name="tilt_to_explore">Tilt to explore depth</string>
+    <string name="choose_wallpaper">Choose Wallpaper</string>
+</resources>

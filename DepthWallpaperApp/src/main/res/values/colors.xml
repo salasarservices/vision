@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_dark">#0D0D1A</color>
+    <color name="accent">#7C6AFF</color>
+    <color name="accent_light">#B8AAFF</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#AAAACC</color>
+    <color name="card_bg">#1A1A2E</color>
+    <color name="btn_apply">#6C63FF</color>
+    <color name="btn_apply_dark">#4A43CC</color>
+    <color name="surface">#12122A</color>
+    <color name="status_bar">#0A0A1A</color>
+</resources>

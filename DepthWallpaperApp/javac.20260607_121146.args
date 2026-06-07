@@ -1,0 +1,11 @@
+-source
+8
+-target
+8
+-bootclasspath
+/usr/lib/android-sdk/platforms/android-23/android.jar
+-cp
+/usr/lib/android-sdk/platforms/android-23/android.jar
+-d
+/home/user/vision/DepthWallpaperApp/build/classes
+@/home/user/vision/DepthWallpaperApp/build/sources.txt
