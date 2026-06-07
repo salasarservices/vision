@@ -1,0 +1,8 @@
+build/classes/
+build/compiled_res/
+build/gen/
+build/aligned.apk
+build/unsigned.apk
+build/linked.apk
+build/sources.txt
+build/classes.dex
