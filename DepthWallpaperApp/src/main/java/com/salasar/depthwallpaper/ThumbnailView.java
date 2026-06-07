@@ -4,19 +4,27 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
 public class ThumbnailView extends View {
     private WallpaperScene scene;
     private Bitmap cache;
+    private String weatherTemp = "--";
+    private String weatherCondition = "Clear";
 
     public ThumbnailView(Context ctx) { super(ctx); }
     public ThumbnailView(Context ctx, AttributeSet attrs) { super(ctx, attrs); }
 
     public void setScene(WallpaperScene s) {
         this.scene = s;
+        this.cache = null;
+        invalidate();
+    }
+
+    public void setWeather(String temp, String condition) {
+        this.weatherTemp = temp;
+        this.weatherCondition = condition;
         this.cache = null;
         invalidate();
     }
@@ -30,7 +38,7 @@ public class ThumbnailView extends View {
             cache = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             Canvas bc = new Canvas(cache);
             bc.drawColor(Color.BLACK);
-            scene.drawAll(bc, w, h);
+            scene.drawAll(bc, w, h, weatherTemp, weatherCondition);
         }
         canvas.drawBitmap(cache, 0, 0, null);
     }
