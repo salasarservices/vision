@@ -1,11 +1,14 @@
 package com.salasar.depthwallpaper.scenes;
 
 import android.graphics.*;
+import com.salasar.depthwallpaper.ClockStyle;
 import com.salasar.depthwallpaper.WallpaperScene;
 
 public class OceanTwilight extends WallpaperScene {
     @Override public String getName() { return "Ocean Twilight"; }
     @Override public int getLayerCount() { return 5; }
+    @Override public ClockStyle getClockStyle() { return ClockStyle.ELEGANT; }
+    @Override public int getClockInsertAfterLayer() { return 1; }
     @Override public int getAccentColor() { return 0xFFFF7043; }
 
     @Override

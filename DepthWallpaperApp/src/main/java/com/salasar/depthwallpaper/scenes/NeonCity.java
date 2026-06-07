@@ -1,12 +1,15 @@
 package com.salasar.depthwallpaper.scenes;
 
 import android.graphics.*;
+import com.salasar.depthwallpaper.ClockStyle;
 import com.salasar.depthwallpaper.WallpaperScene;
 import java.util.Random;
 
 public class NeonCity extends WallpaperScene {
     @Override public String getName() { return "Neon City"; }
     @Override public int getLayerCount() { return 5; }
+    @Override public ClockStyle getClockStyle() { return ClockStyle.FROSTED; }
+    @Override public int getClockInsertAfterLayer() { return 1; }
     @Override public int getAccentColor() { return 0xFFFF00CC; }
 
     private static final int[] NEON_COLORS = {

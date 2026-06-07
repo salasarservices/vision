@@ -1,12 +1,15 @@
 package com.salasar.depthwallpaper.scenes;
 
 import android.graphics.*;
+import com.salasar.depthwallpaper.ClockStyle;
 import com.salasar.depthwallpaper.WallpaperScene;
 import java.util.Random;
 
 public class AuroraMountains extends WallpaperScene {
     @Override public String getName() { return "Aurora Mountains"; }
     @Override public int getLayerCount() { return 5; }
+    @Override public ClockStyle getClockStyle() { return ClockStyle.MINIMAL; }
+    @Override public int getClockInsertAfterLayer() { return 1; }
     @Override public int getAccentColor() { return 0xFF00E5AA; }
 
     @Override

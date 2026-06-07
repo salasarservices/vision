@@ -1,12 +1,15 @@
 package com.salasar.depthwallpaper.scenes;
 
 import android.graphics.*;
+import com.salasar.depthwallpaper.ClockStyle;
 import com.salasar.depthwallpaper.WallpaperScene;
 import java.util.Random;
 
 public class CosmicNebula extends WallpaperScene {
     @Override public String getName() { return "Cosmic Nebula"; }
     @Override public int getLayerCount() { return 5; }
+    @Override public ClockStyle getClockStyle() { return ClockStyle.FUTURISTIC; }
+    @Override public int getClockInsertAfterLayer() { return 1; }
     @Override public int getAccentColor() { return 0xFFAA44FF; }
 
     @Override
