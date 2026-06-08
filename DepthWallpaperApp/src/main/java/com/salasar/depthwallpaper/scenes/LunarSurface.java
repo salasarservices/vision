@@ -56,11 +56,12 @@ public class LunarSurface extends WallpaperScene {
 
     private void drawForeground(Canvas canvas, int w, int h) {
         if (photo == null) return;
-        // Clip to the right 72% of the frame where the moon is.
-        // The HYPEROS clock is centered; the moon's left edge (roughly x=0.28w)
-        // cuts through the clock digits — exactly like HyperOS Moon depth wallpaper.
+        // Clip to right 62% of the frame — the moon fills this region.
+        // Moon left edge at x=0.38w cuts through the right side of the centered
+        // HYPEROS clock, leaving the left portion readable against dark space —
+        // exact replication of HyperOS Moon depth wallpaper.
         canvas.save();
-        canvas.clipRect(w * 0.27f, -MAX_PARALLAX, w + MAX_PARALLAX, h * 0.78f);
+        canvas.clipRect(w * 0.38f, -MAX_PARALLAX, w + MAX_PARALLAX, h * 0.78f);
         Paint p = new Paint(Paint.FILTER_BITMAP_FLAG);
         canvas.drawBitmap(photo, null,
             new RectF(-MAX_PARALLAX, -MAX_PARALLAX, w + MAX_PARALLAX, h + MAX_PARALLAX), p);

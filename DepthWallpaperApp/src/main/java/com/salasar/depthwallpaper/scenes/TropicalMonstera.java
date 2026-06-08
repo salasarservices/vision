@@ -55,10 +55,10 @@ public class TropicalMonstera extends WallpaperScene {
 
     private void drawForeground(Canvas canvas, int w, int h) {
         if (photo == null) return;
-        // Clip to upper 43% of the canvas — the bright monstera leaf lives there.
-        // This layer moves more (parallax ~0.30) so the leaf drifts in front of the clock.
+        // Clip to upper 30% — the monstera leaf tip covers the weather row and
+        // just the very top of the time digits, leaving most of the clock readable.
         canvas.save();
-        canvas.clipRect(-MAX_PARALLAX, -MAX_PARALLAX, w + MAX_PARALLAX, h * 0.43f);
+        canvas.clipRect(-MAX_PARALLAX, -MAX_PARALLAX, w + MAX_PARALLAX, h * 0.30f);
         Paint p = new Paint(Paint.FILTER_BITMAP_FLAG);
         canvas.drawBitmap(photo, null,
             new RectF(-MAX_PARALLAX, -MAX_PARALLAX, w + MAX_PARALLAX, h + MAX_PARALLAX), p);

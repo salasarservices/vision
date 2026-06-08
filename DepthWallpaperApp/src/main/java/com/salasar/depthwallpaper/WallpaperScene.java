@@ -8,7 +8,7 @@ import android.graphics.Path;
 import android.graphics.Shader;
 
 public abstract class WallpaperScene {
-    protected static final int MAX_PARALLAX = 80;
+    protected static final int MAX_PARALLAX = 130; // larger = more parallax coverage padding
 
     public abstract String getName();
     public abstract int getLayerCount();

@@ -23,8 +23,9 @@ public class DepthWallpaperView extends View implements SensorEventListener {
     private static final float SMOOTH = 0.08f;
     private static final float MAX_TILT = 6f;
 
-    // Layer parallax multipliers: 0=background, 4=close foreground
-    private static final float[] PARALLAX = {0.05f, 0.15f, 0.30f, 0.50f, 0.80f};
+    // Layer parallax multipliers: 0=far background (barely moves), higher=closer (moves a lot)
+    // With MAX_PARALLAX=130: layer0 shifts 2px, layer2 shifts 59px, layer4 shifts 130px
+    private static final float[] PARALLAX = {0.02f, 0.08f, 0.45f, 0.75f, 1.0f};
 
     private String weatherTemp = "--";
     private String weatherCondition = "Clear";

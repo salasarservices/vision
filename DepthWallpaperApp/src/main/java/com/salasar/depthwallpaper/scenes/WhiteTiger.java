@@ -56,14 +56,13 @@ public class WhiteTiger extends WallpaperScene {
 
     private void drawForeground(Canvas canvas, int w, int h) {
         if (photo == null) return;
-        // Clip to the tiger's head/upper body region (upper 58% of frame).
-        // The tiger's head is centered and covers roughly the upper half,
-        // so the BRUTAL clock date (h*0.17) and time top (h*0.25) are behind the tiger.
+        // Clip to tiger head only (top 28% of frame).
+        // The date (h*0.185) sits behind the tiger, while the large time digits
+        // (baseline h*0.415) emerge visibly below — the iOS/HyperOS depth effect.
         canvas.save();
         Path clip = new Path();
-        // Rounded upper region covering tiger head + paw
         clip.addRoundRect(
-            new RectF(-MAX_PARALLAX, -MAX_PARALLAX, w + MAX_PARALLAX, h * 0.58f),
+            new RectF(-MAX_PARALLAX, -MAX_PARALLAX, w + MAX_PARALLAX, h * 0.28f),
             w * 0.20f, w * 0.20f, Path.Direction.CW);
         canvas.clipPath(clip);
         Paint p = new Paint(Paint.FILTER_BITMAP_FLAG);

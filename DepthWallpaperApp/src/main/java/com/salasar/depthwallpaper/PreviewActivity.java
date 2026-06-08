@@ -2,6 +2,8 @@ package com.salasar.depthwallpaper;
 
 import android.app.Activity;
 import android.app.WallpaperManager;
+import android.content.ComponentName;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -44,8 +46,9 @@ public class PreviewActivity extends Activity {
         Button btnHome = (Button) findViewById(R.id.btn_home);
         Button btnBoth = (Button) findViewById(R.id.btn_both);
 
+        final int sceneIndex = index;
         btnHome.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { applyWallpaper(false); }
+            @Override public void onClick(View v) { applyAsLiveWallpaper(sceneIndex); }
         });
         btnBoth.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { applyWallpaper(true); }
@@ -67,6 +70,16 @@ public class PreviewActivity extends Activity {
     protected void onPause() {
         super.onPause();
         depthView.stopSensor();
+    }
+
+    private void applyAsLiveWallpaper(int sceneIndex) {
+        // Save selected scene so the WallpaperService knows which to draw.
+        getSharedPreferences(DepthWallpaperService.PREFS, 0)
+                .edit().putInt(DepthWallpaperService.KEY_SCENE, sceneIndex).apply();
+        Intent intent = new Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER);
+        intent.putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+                new ComponentName(getPackageName(), DepthWallpaperService.class.getName()));
+        startActivity(intent);
     }
 
     @SuppressWarnings("deprecation")

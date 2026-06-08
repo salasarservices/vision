@@ -55,11 +55,11 @@ public class GlacierPeak extends WallpaperScene {
 
     private void drawForeground(Canvas canvas, int w, int h) {
         if (photo == null) return;
-        // Clip to the iceberg body — from about 8% to 58% height.
-        // The MINIMAL clock is right-aligned at h*0.34; the iceberg top edge (h*0.08)
-        // slices across the upper portion of the clock, creating the depth effect.
+        // Iceberg foreground occupies the lower 60% of the frame.
+        // The MINIMAL clock (time at h*0.37, date just below) sits in the sky above.
+        // The iceberg top edge at h*0.40 just clips the weather row — depth effect.
         canvas.save();
-        canvas.clipRect(-MAX_PARALLAX, h * 0.07f, w + MAX_PARALLAX, h * 0.58f);
+        canvas.clipRect(-MAX_PARALLAX, h * 0.40f, w + MAX_PARALLAX, h + MAX_PARALLAX);
         Paint p = new Paint(Paint.FILTER_BITMAP_FLAG);
         canvas.drawBitmap(photo, null,
             new RectF(-MAX_PARALLAX, -MAX_PARALLAX, w + MAX_PARALLAX, h + MAX_PARALLAX), p);
